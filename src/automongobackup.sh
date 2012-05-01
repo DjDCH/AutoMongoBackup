@@ -53,6 +53,9 @@ BACKUPDIR="/var/backups/mongodb"
 # Prefix to prepend to the backup file name
 FILEPREFIX=""
 
+# Instead of output to stdout, we can redirect to a logfile
+LOGFILE=""
+
 # Mail setup
 # What would you like to be mailed to you?
 # - log   : send only log file
@@ -260,7 +263,7 @@ DOM=`date +%d`                                    # Date of the Month e.g. 27
 M=`date +%m`                                      # Month number e.g 02
 W=`date +%V`                                      # Week number e.g 37
 VER=0.9                                           # Version Number
-LOGFILE=$BACKUPDIR/$DBHOST-`date +%H%M`.log       # Logfile Name
+LOGOUT=$BACKUPDIR/$DBHOST-`date +%H%M`.log        # Logfile Name
 LOGERR=$BACKUPDIR/ERRORS_$DBHOST-`date +%H%M`.log # Logfile Name
 BACKUPFILES=""
 OPT=""                                            # OPT string for use with mongodump
@@ -297,10 +300,10 @@ else
 fi
 
 # IO redirection for logging.
-touch $LOGFILE
+touch $LOGOUT
 exec 6>&1           # Link file descriptor #6 with stdout.
                     # Saves stdout.
-exec > $LOGFILE     # stdout replaced with file $LOGFILE.
+exec > $LOGOUT      # stdout replaced with file $LOGOUT.
 
 touch $LOGERR
 exec 7>&2           # Link file descriptor #7 with stderr.
@@ -510,23 +513,12 @@ if [ "$POSTBACKUP" ]; then
     echo ----------------------- Postbackup Command End -----------------------
 fi
 
-# Clean up IO redirection if we plan not to deliver log via e-mail.
-[ ! "x$MAILCONTENT" == "xlog" ] && exec 1>&6 2>&7 6>&- 7>&-
-
 if [ -s "$LOGERR" ]; then
     eval $SED "/^connected/d" "$LOGERR"
 fi
 
-if [ "$MAILCONTENT" = "log" ]; then
-    cat "$LOGFILE" | mail -s "Mongo Backup Log for $HOST - $DATE" $MAILADDR
-
+if [ ! "x$MAILCONTENT" == "xlog" ]; then
     if [ -s "$LOGERR" ]; then
-        cat "$LOGERR"
-        cat "$LOGERR" | mail -s "ERRORS REPORTED: Mongo Backup error Log for $HOST - $DATE" $MAILADDR
-    fi
-else
-    if [ -s "$LOGERR" ]; then
-        cat "$LOGFILE"
         echo
         echo "########################### WARNING BEGIN ############################"
         echo
@@ -539,8 +531,24 @@ else
 
         echo
         echo "############################ WARNING END #############################"
+    fi
+fi
+
+# Clean up IO redirection if we plan not to deliver log via e-mail.
+[ ! "x$MAILCONTENT" == "xlog" ] && exec 1>&6 2>&7 6>&- 7>&-
+
+if [ "$MAILCONTENT" = "log" ]; then
+    cat "$LOGOUT" | mail -s "Mongo Backup Log for $HOST - $DATE" $MAILADDR
+
+    if [ -s "$LOGERR" ]; then
+        cat "$LOGERR"
+        cat "$LOGERR" | mail -s "ERRORS REPORTED: Mongo Backup error Log for $HOST - $DATE" $MAILADDR
+    fi
+else
+    if [ -n "$LOGFILE" ]; then
+        cat "$LOGOUT" >> $LOGFILE
     else
-        cat "$LOGFILE"
+        cat "$LOGOUT"
     fi
 fi
 
@@ -551,6 +559,6 @@ if [ -s "$LOGERR" ]; then
 fi
 
 # Clean up Logfile
-rm -f "$LOGFILE" "$LOGERR"
+rm -f "$LOGOUT" "$LOGERR"
 
 exit $STATUS

@@ -36,6 +36,11 @@
 # Unnecessary if authentication is off
 # DBPASSWORD=""
 
+# Database name, e.g test
+# Unnecessary if you want to backup all databases
+# Note that this option can not be used with OPLOG="yes"
+# DBNAME=""
+
 # Host name (or IP address) of mongo server e.g localhost
 DBHOST="127.0.0.1"
 
@@ -94,7 +99,7 @@ REPLICAONSLAVE="yes"
 # Options documentation
 #=====================================================================
 # Set DBUSERNAME and DBPASSWORD of a user that has at least SELECT permission
-# to ALL databases.
+# to ALL databases. Alternatively set DBNAME and provide credentials to that DB.
 #
 # Set the DBHOST option to the server you wish to backup, leave the
 # default to backup "this server".(to backup multiple servers make
@@ -262,9 +267,15 @@ if [ "$DBUSERNAME" ]; then
     OPT="$OPT --username=$DBUSERNAME --password=$DBPASSWORD"
 fi
 
-# Do we use oplog for point-in-time snapshotting?
-if [ "$OPLOG" = "yes" ]; then
-    OPT="$OPT --oplog"
+# Do we want one or all databases?
+if [ "$DBNAME" ]; then
+    OPT="$OPT --db=$DBNAME"
+else
+    # Do we use oplog for point-in-time snapshotting?
+    # Can not be used for single-database dumps
+    if [ "$OPLOG" = "yes" ]; then
+        OPT="$OPT --oplog"
+    fi
 fi
 
 # Create required directories

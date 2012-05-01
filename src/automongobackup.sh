@@ -257,7 +257,7 @@ done
 
 PATH=/usr/local/bin:/usr/bin:/bin
 DATE=`date +%Y-%m-%d`                             # Date e.g 2002-09-21
-DATETIME=`date +%Y-%m-%d_%Hh%Mm`                  # Datetime e.g 2004-04-30_22h04m
+DATETIME=`date +%Y-%m-%d_%H:%M:%S`                # Datetime e.g 2004-04-30_22:04:31
 DOW=`date +%u`                                    # Day number of the week 1 to 7 where 1 represents Monday
 DOM=`date +%d`                                    # Date of the Month e.g. 27
 M=`date +%m`                                      # Month number e.g 02
@@ -448,39 +448,10 @@ echo
 echo Starting backup at `date "+%Y-%m-%d %H:%M:%S %Z"`
 echo
 
-# Monthly Full Backup of all Databases
-if [ $DOM = "01" ]; then
-    echo Processing monthly backup
-    echo
-    FILE="$BACKUPDIR/monthly/${FILEPREFIX}m$M.$DATE"
-
-# Weekly Backup
-elif [ $DOW = $DOWEEKLY ]; then
-    echo Rotating 5 weeks backups
-    echo
-    if [ "$W" -le 05 ]; then
-        REMW=`expr 48 + $W`
-    elif [ "$W" -lt 15 ]; then
-        REMW=0`expr $W - 5`
-    else
-        REMW=`expr $W - 5`
-    fi
-    rm -f "$BACKUPDIR/weekly/*w$REMW.*"
-
-    echo Processing weekly backup
-    echo
-    FILE="$BACKUPDIR/weekly/${FILEPREFIX}w$W.$DATE"
-
-# Daily Backup
-else
-    echo Rotating last weeks backups
-    echo
-    rm -f "$BACKUPDIR/daily/*d$DOW.*"
-
-    echo Processing daily backup
-    echo
-    FILE="$BACKUPDIR/daily/${FILEPREFIX}d$DOW.$DATE"
-fi
+# Backup
+echo Processing backup
+echo
+FILE="$BACKUPDIR/${FILEPREFIX}.$DATETIME"
 
 # Actually do the backup and compress the output
 dbdump $FILE && compression $FILE

@@ -360,7 +360,7 @@ function compression() {
     dir=$(dirname $1)
     file=$(basename $1)
     if [ -n "$COMP" ]; then
-        [ "$COMP" = "gzip" ] && SUFFIX=".tgz"
+        [ "$COMP" = "gzip" ] && SUFFIX=".tar.gz"
         [ "$COMP" = "bzip2" ] && SUFFIX=".tar.bz2"
         echo Tar and $COMP to "$file$SUFFIX"
         cd "$dir" && tar -cf - "$file" | $COMP -c > "$file$SUFFIX"

@@ -250,12 +250,12 @@ done
 #=====================================================================
 
 PATH=/usr/local/bin:/usr/bin:/bin
-DATE=`date +%Y-%m-%d_%Hh%Mm`                      # Datestamp e.g 2002-09-21
-DOW=`date +%A`                                    # Day of the week e.g. Monday
-DNOW=`date +%u`                                   # Day number of the week 1 to 7 where 1 represents Monday
+DATE=`date +%Y-%m-%d`                             # Date e.g 2002-09-21
+DATETIME=`date +%Y-%m-%d_%Hh%Mm`                  # Datetime e.g 2004-04-30_22h04m
+DOW=`date +%u`                                    # Day number of the week 1 to 7 where 1 represents Monday
 DOM=`date +%d`                                    # Date of the Month e.g. 27
-M=`date +%B`                                      # Month e.g January
-W=`date +%V`                                      # Week Number e.g 37
+M=`date +%m`                                      # Month number e.g 02
+W=`date +%V`                                      # Week number e.g 37
 VER=0.9                                           # Version Number
 LOGFILE=$BACKUPDIR/$DBHOST-`date +%H%M`.log       # Logfile Name
 LOGERR=$BACKUPDIR/ERRORS_$DBHOST-`date +%H%M`.log # Logfile Name
@@ -440,7 +440,7 @@ if [ $DOM = "01" ]; then
     FILE="$BACKUPDIR/monthly/$DATE.$M"
 
 # Weekly Backup
-elif [ $DNOW = $DOWEEKLY ]; then
+elif [ $DOW = $DOWEEKLY ]; then
     echo Weekly Backup
     echo
     echo Rotating 5 weeks Backups...

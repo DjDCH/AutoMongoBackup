@@ -362,13 +362,16 @@ function compression() {
     SUFFIX=""
     dir=$(dirname $1)
     file=$(basename $1)
+
     if [ -n "$COMP" ]; then
         [ "$COMP" = "gzip" ] && SUFFIX=".tar.gz"
         [ "$COMP" = "bzip2" ] && SUFFIX=".tar.bz2"
-        echo Tar and $COMP to "$file$SUFFIX"
+        echo
+        echo Archiving backup with tar and $COMP to "$1$SUFFIX"
         cd "$dir" && tar -cf - "$file" | $COMP -c > "$file$SUFFIX"
         cd - >/dev/null || return 1
     else
+        echo
         echo "No compression option set, check advanced settings"
     fi
 
@@ -382,23 +385,13 @@ function compression() {
     fi
 
     if [ "$CLEANUP" = "yes" ]; then
-        echo Cleaning up folder at "$1"
+        echo
+        echo Cleaning up directory "$1"
         rm -rf "$1"
     fi
 
     return 0
 }
-
-# Run command before we begin
-if [ "$PREBACKUP" ]; then
-    echo ======================================================================
-    echo "Prebackup command output."
-    echo
-    eval $PREBACKUP
-    echo
-    echo ======================================================================
-    echo
-fi
 
 # Hostname for LOG information
 if [ "$DBHOST" = "localhost" -o "$DBHOST" = "127.0.0.1" ]; then
@@ -424,7 +417,7 @@ if [ "x${REPLICAONSLAVE}" == "xyes" ]; then
 fi
 
 echo ======================================================================
-echo AutoMongoBackup VER $VER
+echo AutoMongoBackup Version $VER
 
 if [ ! -z "$SECONDARY_WARNING" ]; then
     echo
@@ -432,21 +425,36 @@ if [ ! -z "$SECONDARY_WARNING" ]; then
 fi
 
 echo
-echo Backup of Database Server - $HOST on $DBHOST
+echo Backup of MongoDB Server - $HOST on $DBHOST
 echo ======================================================================
+echo
 
-echo Backup Start `date`
-echo ======================================================================
+# Run command before we begin
+if [ "$PREBACKUP" ]; then
+    echo ---------------------- Prebackup Command Begin -----------------------
+    echo
+    eval $PREBACKUP
+    echo
+    echo ----------------------- Prebackup Command End ------------------------
+    echo
+fi
+
+echo ---------------------------- Backup Begin ----------------------------
+echo
+
+echo Starting backup at `date "+%Y-%m-%d %H:%M:%S %Z"`
+echo
+
 # Monthly Full Backup of all Databases
 if [ $DOM = "01" ]; then
-    echo Monthly Full Backup
+    echo Processing monthly backup
+    echo
     FILE="$BACKUPDIR/monthly/${FILEPREFIX}m$M.$DATE"
 
 # Weekly Backup
 elif [ $DOW = $DOWEEKLY ]; then
-    echo Weekly Backup
+    echo Rotating 5 weeks backups
     echo
-    echo Rotating 5 weeks Backups...
     if [ "$W" -le 05 ]; then
         REMW=`expr 48 + $W`
     elif [ "$W" -lt 15 ]; then
@@ -455,15 +463,18 @@ elif [ $DOW = $DOWEEKLY ]; then
         REMW=`expr $W - 5`
     fi
     rm -f "$BACKUPDIR/weekly/*w$REMW.*"
+
+    echo Processing weekly backup
     echo
     FILE="$BACKUPDIR/weekly/${FILEPREFIX}w$W.$DATE"
 
 # Daily Backup
 else
-    echo Daily Backup of Databases
-    echo Rotating last weeks Backup...
+    echo Rotating last weeks backups
     echo
     rm -f "$BACKUPDIR/daily/*d$DOW.*"
+
+    echo Processing daily backup
     echo
     FILE="$BACKUPDIR/daily/${FILEPREFIX}d$DOW.$DATE"
 fi
@@ -471,24 +482,32 @@ fi
 # Actually do the backup and compress the output
 dbdump $FILE && compression $FILE
 
-echo ----------------------------------------------------------------------
-echo Backup End Time `date`
-echo ======================================================================
+echo
+echo Finishing backup at `date "+%Y-%m-%d %H:%M:%S %Z"`
+echo
 
-echo Total disk space used for backup storage..
-echo Size - Location
+echo ----------------------------- Backup End -----------------------------
+echo
+
+echo -------------------------- Disk Space Begin --------------------------
+echo
+
+echo Total disk space used for backup storage:
+echo
+echo Size Location
 echo `du -hs "$BACKUPDIR"`
 echo
-echo ======================================================================
+
+echo --------------------------- Disk Space End ---------------------------
 
 # Run command when we're done
 if [ "$POSTBACKUP" ]; then
-    echo ======================================================================
-    echo "Postbackup command output."
+    echo
+    echo ---------------------- Postbackup Command Begin ----------------------
     echo
     eval $POSTBACKUP
     echo
-    echo ======================================================================
+    echo ----------------------- Postbackup Command End -----------------------
 fi
 
 # Clean up IO redirection if we plan not to deliver log via e-mail.
@@ -509,10 +528,17 @@ else
     if [ -s "$LOGERR" ]; then
         cat "$LOGFILE"
         echo
-        echo "###### WARNING ######"
-        echo "STDERR written to during mongodump execution."
-        echo "The backup probably succeeded, as mongodump sometimes writes to STDERR, but you may wish to scan the error log below:"
+        echo "########################### WARNING BEGIN ############################"
+        echo
+        echo STDERR written to during mongodump execution.
+        echo The backup probably succeeded, as mongodump sometimes writes to STDERR,
+        echo but you may wish to scan the error log below:
+        echo
+
         cat "$LOGERR"
+
+        echo
+        echo "############################ WARNING END #############################"
     else
         cat "$LOGFILE"
     fi

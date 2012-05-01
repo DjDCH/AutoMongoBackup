@@ -224,7 +224,7 @@ REPLICAONSLAVE="yes"
 #=====================================================================
 #=====================================================================
 
-shellout () {
+function shellout() {
     if [ -n "$1" ]; then
         echo $1
         exit 1
@@ -299,7 +299,7 @@ exec 2> $LOGERR     # stderr replaced with file $LOGERR.
 # Functions
 
 # Database dump function
-dbdump () {
+function dbdump() {
     mongodump --host=$DBHOST:$DBPORT --out=$1 $OPT
     [ -e "$1" ] && return 0
     echo "ERROR: mongodump failed to create dumpfile: $1" >&2
@@ -310,7 +310,7 @@ dbdump () {
 # Select first available Secondary member in the Replica Sets and show its
 # host name and port.
 #
-function select_secondary_member {
+function select_secondary_member() {
     # We will use indirect-reference hack to return variable from this function.
     local __return=$1
 
@@ -344,7 +344,7 @@ function select_secondary_member {
 }
 
 # Compression function plus latest copy
-compression () {
+function compression() {
     SUFFIX=""
     dir=$(dirname $1)
     file=$(basename $1)
@@ -453,7 +453,10 @@ else
     echo
     FILE="$BACKUPDIR/daily/$DATE.$DOW"
 fi
+
+# Actually do the backup and compress the output
 dbdump $FILE && compression $FILE
+
 echo ----------------------------------------------------------------------
 echo Backup End Time `date`
 echo ======================================================================

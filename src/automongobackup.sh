@@ -397,7 +397,7 @@ if [ "x${REPLICAONSLAVE}" == "xyes" ]; then
 fi
 
 echo ======================================================================
-echo AutoMongoBackup Version $VER
+echo AutoMongoBackup Version $VER - Standalone Edition
 
 if [ ! -z "$SECONDARY_WARNING" ]; then
     echo
@@ -428,7 +428,7 @@ echo
 # Backup
 echo Processing backup
 echo
-FILE="$BACKUPDIR/${FILEPREFIX}.$DATETIME"
+FILE="$BACKUPDIR/${FILEPREFIX}$DATETIME"
 
 # Actually do the backup and compress the output
 dbdump $FILE && compression $FILE

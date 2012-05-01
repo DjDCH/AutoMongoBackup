@@ -48,7 +48,7 @@ DBHOST="127.0.0.1"
 DBPORT="27017"
 
 # Backup directory location e.g /backups
-BACKUPDIR="/var/backups/mongodb"
+BACKUPDIR="/var/backups/mongodb/standalone"
 
 # Prefix to prepend to the backup file name
 FILEPREFIX=""
@@ -74,20 +74,11 @@ MAXATTSIZE="4000"
 # === ADVANCED OPTIONS ( Read the doc's below for details )===
 #=============================================================
 
-# Which day do you want weekly backups? (1 to 7 where 1 is Monday)
-DOWEEKLY=6
-
 # Choose Compression type. (gzip or bzip2)
 COMP="gzip"
 
 # Choose if the uncompressed folder should be deleted after compression has completed
 CLEANUP="yes"
-
-# Additionally keep a copy of the most recent backup in a seperate directory.
-LATEST="yes"
-
-# Make Hardlink not a copy
-LATESTLINK="yes"
 
 # Use oplog for point-in-time snapshotting.
 OPLOG="yes"
@@ -285,12 +276,7 @@ else
 fi
 
 # Create required directories
-mkdir -p $BACKUPDIR/{daily,weekly,monthly} || shellout 'failed to create directories'
-
-if [ "$LATEST" = "yes" ]; then
-    rm -rf "$BACKUPDIR/latest"
-    mkdir -p "$BACKUPDIR/latest" || shellout 'failed to create directory'
-fi
+mkdir -p $BACKUPDIR || shellout 'failed to create directories'
 
 # Check for correct sed usage
 if [ $(uname -s) = 'Darwin' -o $(uname -s) = 'FreeBSD' ]; then
@@ -376,15 +362,6 @@ function compression() {
     else
         echo
         echo "No compression option set, check advanced settings"
-    fi
-
-    if [ "$LATEST" = "yes" ]; then
-        if [ "$LATESTLINK" = "yes" ];then
-            COPY="ln"
-        else
-            COPY="cp"
-        fi
-        $COPY "$1$SUFFIX" "$BACKUPDIR/latest/"
     fi
 
     if [ "$CLEANUP" = "yes" ]; then

@@ -437,7 +437,7 @@ echo ======================================================================
 # Monthly Full Backup of all Databases
 if [ $DOM = "01" ]; then
     echo Monthly Full Backup
-    FILE="$BACKUPDIR/monthly/$DATE.$M"
+    FILE="$BACKUPDIR/monthly/m$M.$DATE"
 
 # Weekly Backup
 elif [ $DOW = $DOWEEKLY ]; then
@@ -451,18 +451,18 @@ elif [ $DOW = $DOWEEKLY ]; then
     else
         REMW=`expr $W - 5`
     fi
-    rm -f "$BACKUPDIR/weekly/week.$REMW.*"
+    rm -f "$BACKUPDIR/weekly/w$REMW.*"
     echo
-    FILE="$BACKUPDIR/weekly/week.$W.$DATE"
+    FILE="$BACKUPDIR/weekly/w$W.$DATE"
 
 # Daily Backup
 else
     echo Daily Backup of Databases
     echo Rotating last weeks Backup...
     echo
-    rm -f "$BACKUPDIR/daily/*.$DOW.*"
+    rm -f "$BACKUPDIR/daily/d$DOW.*"
     echo
-    FILE="$BACKUPDIR/daily/$DATE.$DOW"
+    FILE="$BACKUPDIR/daily/d$DOW.$DATE"
 fi
 
 # Actually do the backup and compress the output
